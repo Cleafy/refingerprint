@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Refingerprint</title>
+</head>
+<body>
+    <script type="text/javascript" src="bower_components/fingerprintjs2/fingerprint2.js"></script>
+    <script type="text/javascript" src="refingerprint.js"></script>
+    <script type="text/javascript">
+        var options = {
+            swfPath: 'bower_components/flash/compiled/FontList.swf',
+            imagesPath: 'images/test'
+        };
+
+        new Refingerprint(options).get(function (result, components) {
+            console.log(result);
+            console.log(components);
+        });
+    </script>
+</body>
+</html>

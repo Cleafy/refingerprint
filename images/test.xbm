@@ -1,0 +1,4 @@
+#define test_width 1
+#define test_height 1
+static unsigned short test_bits[] = {
+   0x0001 };

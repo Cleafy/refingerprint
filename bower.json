@@ -1,0 +1,21 @@
+{
+  "name": "refingerprint",
+  "authors": [
+    "Nicolò Andronio <nicolo.andronio@cleafy.com>"
+  ],
+  "description": "A more refined fingerprinting module based on Fingerprint2.js",
+  "main": "",
+  "moduleType": [],
+  "keywords": [
+    "fingerprinting",
+    "security",
+    "fingerprint",
+    "browser"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "dependencies": {
+    "fingerprintjs2": "^1.1.0"
+  }
+}
