@@ -4,20 +4,22 @@
     else if ((typeof define === "function") && define.amd) { define(definition); }
     else { context[name] = definition(); }
 })("Refingerprint", this, function () {
+    "use strict";
+
     // Support for array map-reduce and enumeration
 
     if (!Array.prototype.forEach) {
         Array.prototype.forEach = function (f) {
-            for (var key in this)
-                f(this[key]);
+            for (var i = 0; i < this.length; ++i)
+                f(this[i]);
         };
     }
 
     if (!Array.prototype.map) {
         Array.prototype.map = function (f) {
             var r = [];
-            for (var key in this)
-                r[key] = f(this[key]);
+            for (var i = 0; i < this.length; ++i)
+                r[i] = f(this[i]);
             return r;
         };
     }
@@ -25,17 +27,28 @@
     if (!Array.prototype.filter) {
         Array.prototype.filter = function (f) {
             var r = [];
-            for (var key in this)
-                if (f(this[key]))
-                    r[key] = this[key];
+            for (var i = 0; i < this.length; ++i)
+                if (f(this[i]))
+                    r[i] = this[i];
             return r;
+        };
+    }
+
+    if (!Object.keys) {
+        Object.keys = function (object) {
+            var keys = [];
+
+            for (var key in object)
+                keys.push(key);
+
+            return keys;
         };
     }
 
     // Native functions detections
     // Courtesy of https://davidwalsh.name/detect-native-function
     
-    var isNative = (function() {
+    var isNative = (function () {
         var toString = Object.prototype.toString;
         var fnToString = Function.prototype.toString;
         var reHostCtor = /^\[object .+?Constructor\]$/;
@@ -112,6 +125,21 @@
         result.fields.sort();
 
         return result;
+    }
+
+    function errorOf(e) {
+        var error = "";
+
+        if ('string' == typeof e)
+            error = e;
+        else if (e.message && ('string' == typeof e.message))
+            error = e.message;
+        else if (e.description && ('string' == typeof e.description))
+            error = e.description;
+        else if (e.toString && ('function' == typeof e.toString))
+            error = e.toString();
+
+        return error;
     }
 
     function stringifyArray(array) {
@@ -373,28 +401,23 @@
         {
             name: "error_messages",
             detect: function (options) {
+                // We use eval to support IE6. Otherwise the file won't be interpreted
                 var offendingFunctions = [
                     function () {
                         // Accessing property of undefined object
-                        var something;
-                        var whatever = something.else;
+                        eval("var something; var whatever = something.else;");
                     },
                     function () {
                         // Treating non-functions like functions
-                        var number = 42;
-                        number();
+                        eval("var number = 42; number();");
                     },
                     function () {
                         // Using r-values instead of l-values
-                        var f = function () { return 0; };
-                        f() = 1;
+                        eval("var f = function () { return 0; }; f() = 1;");
                     },
                     function () {
                         // Serializing a circular reference
-                        var a = { };
-                        var b = { a: a };
-                        a.b = b;
-                        JSON.stringify(a);
+                        eval("var a = { }; var b = { a: a }; a.b = b; JSON.stringify(a);");
                     },
                     function () {
                         // Unexpected tokens
@@ -402,26 +425,14 @@
                     },
                     function () {
                         // Infinitely recursive call
-                        var f = function () { f(); };
-                        f();
+                        eval("var f = function () { f(); }; f();");
                     }
                 ];
                 var diagnose = function (offendingFunction) {
                     try {
                         offendingFunction();
                     } catch (e) {
-                        var error;
-
-                        if ('string' == typeof e)
-                            error = e;
-                        else if (e.message && ('string' == typeof e.message))
-                            error = e.message;
-                        else if (e.description && ('string' == typeof e.description))
-                            error = e.description;
-                        else if (e.toString && ('function' == typeof e.toString))
-                            error = e.toString();
-
-                        return error;
+                        return errorOf(e);
                     }
                 };
                 var result = offendingFunctions.map(function (f) {
@@ -476,48 +487,63 @@
     return function (options) {
         var fp2 = new Fingerprint2(options);
 
-        return {
-            get: function (done) {
-                fp2.get(function (result, components) {
-                    var temp = "";
+        this.get = function (done) {
+            fp2.get(function (result, components) {
+                var temp = "";
 
-                    // Execute all enabled synchronous modules
-                    syncModules.filter(function (syncModule) {
-                        return !options["exclude" + snakeToPascal(syncModule.name)];
-                    }).forEach(function (syncModule) {
+                // Execute all enabled synchronous modules
+                syncModules.filter(function (syncModule) {
+                    return !options["exclude" + snakeToPascal(syncModule.name)];
+                }).forEach(function (syncModule) {
+                    try {
                         var detection = syncModule.detect(options);
                         temp += detection.raw;
                         components.push({ key: syncModule.name, value: detection.result });
-                    });
-
-                    // This function simply calls the done callback with the actual
-                    // result of the detections
-                    var finalize = function () {
-                        done(result + fp2.x64hash128(temp, 31), components);
-                    };
-
-                    var enabledAsyncModules = asyncModules.filter(function (asyncModule) {
-                        return !options["exclude" + snakeToPascal(asyncModule.name)];
-                    });
-
-                    if (enabledAsyncModules.length == 0) {
-                        finalize();
-                    } else {
-                        // Call all asynchronous modules sequentially through a sort of continuation
-                        var index = 0;
-                        var continuation = function (detection) {
-                            temp += detection.raw;
-                            components.push({ key: enabledAsyncModules[index].name, value: detection.result });
-
-                            if (++index == enabledAsyncModules.length)
-                                return finalize();
-
-                            enabledAsyncModules[index].detect(options, continuation);
-                        };
-                        enabledAsyncModules[index].detect(options, continuation);
+                    } catch (e) {
+                        var error = errorOf(e);
+                        temp += error;
+                        components.push({ key: syncModule.name, value: error });
                     }
                 });
-            }
+
+                // This function simply calls the done callback with the actual
+                // result of the detections
+                var finalize = function () {
+                    done(result + fp2.x64hash128(temp, 31), components);
+                };
+
+                var enabledAsyncModules = asyncModules.filter(function (asyncModule) {
+                    return !options["exclude" + snakeToPascal(asyncModule.name)];
+                });
+
+                if (enabledAsyncModules.length == 0) {
+                    finalize();
+                } else {
+                    // Call all asynchronous modules sequentially through a sort of continuation
+                    var index = 0;
+                    var continuation = function (detection) {
+                        temp += detection.raw;
+                        components.push({ key: enabledAsyncModules[index].name, value: detection.result });
+
+                        if (++index == enabledAsyncModules.length)
+                            return finalize();
+
+                        try {
+                            enabledAsyncModules[index].detect(options, continuation);
+                        } catch (e) {
+                            var error = errorOf(e);
+                            continuation({ result: error, raw: error });
+                        }
+                    };
+
+                    try {
+                        enabledAsyncModules[index].detect(options, continuation);
+                    } catch (e) {
+                        var error = errorOf(e);
+                        continuation({ result: error, raw: error });
+                    }
+                }
+            });
         };
     };
 });
