@@ -168,7 +168,7 @@
     }
 
     function stringifyObject(object) {
-        return Object.keys(object)
+        return keysOf(object)
             .map(function (key) { return (key + '=' + object[key]); })
             .join(';');
     }
@@ -411,7 +411,7 @@
             name: "style_dump",
             detect: function (options) {
                 var div = document.createElement("div");
-                var result = Object.keys(div.style);
+                var result = keysOf(div.style);
                 result.sort();
                 return {
                     result: result,
