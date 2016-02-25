@@ -12,7 +12,7 @@ of Fingerprint2js, we left the external library interface intact.
 #### Bower
 
 ```
-bower install fingerprintjs2
+bower install https://github.com/IcyTotem/refingerprint.git
 ```
 
 ## Usage
