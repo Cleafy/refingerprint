@@ -12,6 +12,10 @@
     "fingerprint",
     "browser"
   ],
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/IcyTotem/refingerprint"
+  },
   "license": "MIT",
   "homepage": "",
   "private": true,
