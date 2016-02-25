@@ -1,0 +1,28 @@
+{
+  "name": "Refingerprint",
+  "version": "0.1.0",
+  "description": "A more refined fingerprinting module based on Fingerprint2.js",
+  "main": "src/index.html",
+  "dependencies": {
+    "del": "^2.2.0",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-uglify": "^1.5.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Tests? what tests?\" && exit 1"
+  },
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/IcyTotem/refingerprint"
+  },
+  "keywords": [
+    "fingerprinting",
+    "security",
+    "fingerprint",
+    "browser"
+  ],
+  "author": "Nicolò Andronio <nicolo.andronio@cleafy.com>",
+  "license": "MIT"
+}
