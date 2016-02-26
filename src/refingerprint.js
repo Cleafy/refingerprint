@@ -119,8 +119,7 @@
     function membersOf(obj) {
         var result = {
             functions: [],
-            types: [],
-            fields: []
+            types: []
         };
         var isConstructor = function (functionName) {
             return (functionName.length > 1) &&
@@ -136,14 +135,11 @@
                     result.types.push(key);
                 else
                     result.functions.push(key);
-            } else {
-                result.fields.push(key);
             }
         });
 
         result.functions.sort();
         result.types.sort();
-        result.fields.sort();
 
         return result;
     }
@@ -174,7 +170,6 @@
     }
 
     function stringifyMembers(membersDump) {
-        // stringifyArray(membersDump.fields) excluded since they are more tamperable
         return stringifyArray(membersDump.types) + ";" + stringifyArray(membersDump.functions);
     }
 
