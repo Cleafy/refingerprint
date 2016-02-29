@@ -50,7 +50,7 @@
             var r = [];
             for (var i = 0; i < this.length; ++i)
                 if (f(this[i]))
-                    r[i] = this[i];
+                    r.push(this[i]);
             return r;
         };
     }
