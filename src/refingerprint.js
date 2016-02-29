@@ -460,6 +460,40 @@
                     raw: stringifyArray(result)
                 };
             }
+        },
+        {
+            name: "silverlight",
+            detect: function (options) {
+                var result = { installed: false, supported: false, versions: [] };
+                var releasedVersions = [
+                    "5.1.41212", "5.1.41105", "5.1.40728", "5.1.40416", "5.1.30514",
+                    "5.1.30214", "5.1.20913", "5.1.20513", "5.1.20125", "5.1.10411", "5.0.61118", "5.0.60818",
+                    "5.0.60401", "4.1.10329", "4.1.10111", "4.0.60831", "4.0.60531", "4.0.60310", "4.0.60129",
+                    "4.0.51204", "4.0.50917", "4.0.50826", "4.0.50524", "4.0.50401", "3.0.50611", "3.0.50106",
+                    "3.0.40818", "3.0.40723", "3.0.40624", "2.0.40115", "2.0.31005", "1.0.30715", "1.0.30401",
+                    "1.0.30109", "1.0.21115", "1.0.20816"
+                ];
+
+                if (typeof Silverlight !== "undefined") {
+                    if (typeof Silverlight.isInstalled === "function") {
+                        var installedVersions = releasedVersions.filter(Silverlight.isInstalled);
+                        result.installed = (installedVersions.length > 0);
+                        result.versions = installedVersions;
+                    }
+
+                    if (typeof Silverlight.supportedUserAgent === "function")
+                        result.supported = Silverlight.supportedUserAgent();
+                } else {
+                    try {
+                        result.installed = navigator.plugins["Silverlight Plug-In"] ? true : false;
+                    } catch(whatever) { }
+                }
+
+                return {
+                    result: result,
+                    raw: stringifyObject(result)
+                };
+            }
         }
     ];
     var asyncModules = [
